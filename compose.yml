@@ -1,0 +1,39 @@
+services:
+  app:
+    # Docker finds the Dockerfile in the
+    # current directory automatically and used it
+    # it to build our image
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - flight_booking_nw
+
+  db:
+    image: postgres:16
+    restart: always
+    env_file:
+      - ./.env
+    ports:
+      - "55432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - flight_booking_nw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+
+networks:
+  flight_booking_nw:
+volumes:
+  postgres_data:
